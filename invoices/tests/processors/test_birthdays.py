@@ -3,6 +3,9 @@ from django.utils import timezone
 
 from invoices.models import Patient
 from invoices.processors.birthdays import list_patients_with_birth_date_in_range_still_alive, process_and_generate
+import datetime
+import mock
+
 
 
 class BirthdayTestCase(TestCase):
@@ -118,4 +121,17 @@ class BirthdayTestCase(TestCase):
         result = process_and_generate(30)
         self.assertEqual(len(result), 1)
 
+    def test_process_and_generate_birthday_in_december(self):
+        Patient.objects.create(code_sn='1960122061534',
+                               first_name='I DONT WANT THIS PATIENT TOO',
+                               name='name 0',
+                               address='address 0',
+                               zipcode='zipcode 0',
+                               city='city 0',
+                               phone_number='000')
+        target = datetime.datetime(2020, 12, 16, 11, 00)
+        with mock.patch.object(timezone, 'datetime', mock.Mock(wraps=timezone.datetime)) as patched:
+            patched.today.return_value = target
+            result = process_and_generate(30) 
+            self.assertEqual(len(result), 1)
 
